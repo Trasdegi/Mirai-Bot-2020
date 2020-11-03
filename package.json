@@ -1,0 +1,17 @@
+{
+  "name": "mirai_bot",
+  "version": "2.0.0",
+  "description": "2020 Mirai Bot",
+  "main": "mirai_bot.ts",
+  "repository": "https://equipemirai.com",
+  "author": "Kazuhiro",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^14.14.6",
+    "discord.js": "^12.4.1",
+    "typescript": "^4.0.5"
+  },
+  "devDependencies": {
+    "ts-node": "^9.0.0"
+  }
+}
