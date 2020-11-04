@@ -3,13 +3,15 @@
     "target": "es6",
     "module": "commonjs",
     "outDir": "dist",
-    "sourceMap": true
+    "sourceMap": true,
+    "rootDir": "./"
   },
   "files": [
     "./node_modules/@types/mocha/index.d.ts",
     "./node_modules/@types/node/index.d.ts"
   ],
   "include": [
+    "mirai_bot.ts",
     "src/**/*.ts"
   ],
   "exclude": [

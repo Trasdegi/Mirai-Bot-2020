@@ -1,5 +1,6 @@
 import { CommandoClient } from 'discord.js-commando';
 import { join } from 'path';
+import { readdirSync } from "fs";
 
 new (class MiraiBot extends CommandoClient {
   constructor(token) {
@@ -11,9 +12,12 @@ new (class MiraiBot extends CommandoClient {
       owner: '140033402681163776',
     });
 
+    this.setEvents();
+
     // Setup Commando Registry
     this.registry
       .registerDefaultTypes()
+      .registerDefaultGroups()
       .registerGroups([
         ['admin', 'Administration'],
         ['mod', 'Moderation'],
@@ -21,8 +25,7 @@ new (class MiraiBot extends CommandoClient {
         ['misc', 'Miscellanious'],
         ['util', 'Utility']
       ])
-      .registerDefaultGroups()
-      .registerCommandsIn(join(__dirname, 'commands'));
+      .registerCommandsIn(join(__dirname, 'src/commands'));
 
     // Connect the bot
     this.login(token).catch(console.error);
@@ -31,21 +34,22 @@ new (class MiraiBot extends CommandoClient {
 
   }
 
-  once(event: string, listener: Function): this {
-    return super.on('ready', () => {
+  setEvents(): this {
+
+    this.once('ready', () => {
       console.log(`Mirai Bot logged in as ${this.user.tag}. (${this.user.id})`);
-      this.user.setActivity('servir le futur.');
+      this.user.setActivity('servir le futur.').catch(console.error);
     });
+
+    for (const event of readdirSync('./src/events').filter(file => file.endsWith('.js'))) {
+      this.on(event.slice(0, event.length - 3), require(`./src/events/${event}`));
+    }
+
+    return this;
   }
 
   /*on(event: string, listener: Function): this {
     return super.on('error', (error) => console.error(error));
   }*/
-
-  on(event: string, listener: Function): this {
-    return super.on('commandRegister', (command) => {
-      console.log(`La commande ${command.name} a été enregistrée.`);
-    });
-  }
 
 })(process.env.bot_token)
