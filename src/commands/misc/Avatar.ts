@@ -11,8 +11,14 @@ module.exports = class AvatarCommand extends Command {
     super(client, {
       name: 'avatar',
       group: 'misc',
+      aliases: ['a'],
       memberName: 'avatar',
-      description: 'Affiche votre avatar en grand.'
+      description: 'Affiche votre avatar en grand.',
+      throttling: {
+        usages: 2,
+        duration: 10,
+      },
+      guildOnly: true
     });
 
     this.examples = [
@@ -23,12 +29,12 @@ module.exports = class AvatarCommand extends Command {
 
   run(message: CommandoMessage, args: object | string | string[], fromPattern: boolean, result?: ArgumentCollectorResult): Promise<any> | any {
     return message.embed(new MessageEmbed()
-      .setAuthor(message.member ? message.member.displayName : message.author.username, message.author.avatarURL())
+      .setAuthor(message.member.displayName, message.author.avatarURL())
       .setTitle("Lien de l'image")
       .setURL(message.author.avatarURL())
       .setImage(message.author.avatarURL())
-      .setColor(message.member ? message.member.displayColor : 0)
-      .setFooter(message.author.presence.activities.map(activity => activity.name), message.author.avatarURL())
+      .setColor(message.member.displayColor)
+      .setFooter(`Date d'admission : ${message.member.joinedAt.toDateString()}`, message.member.user.avatarURL())
     );
   }
 }

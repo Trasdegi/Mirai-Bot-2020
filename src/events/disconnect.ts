@@ -1,0 +1,1 @@
+module.exports = (client, event) => console.info(`Connection disconnected :\n${event}`);
