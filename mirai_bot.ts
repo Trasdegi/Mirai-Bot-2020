@@ -1,14 +1,13 @@
-import { CommandoClient, SQLiteProvider } from 'discord.js-commando';
+require('dotenv').config();
+import { CommandoClient } from 'discord.js-commando';
 import { join } from 'path';
 import { readdirSync } from "fs";
 import {
-  Collection,
   ColorResolvable,
-  Guild,
   MessageEmbed,
-  Snowflake,
   TextChannel
 } from "discord.js";
+import { metric } from '@pm2/io';
 
 // UTC + 2 or UTC + 1
 const UTC_LOCAL_TIMESHIFT = 1;
@@ -28,6 +27,9 @@ new (class MiraiBot extends CommandoClient {
       owner: '140033402681163776',
     });
 
+    const realtimeUsers = metric({name: 'MiraiBot Users'});
+    realtimeUsers.set(this.users);
+
     this.setupDatabase()
       .then(() => this.setEvents())
       .then(() => this.setupIntervals())
@@ -43,7 +45,9 @@ new (class MiraiBot extends CommandoClient {
           ['fun', 'Fun'],
           ['misc', 'Miscellanious'],
           ['util', 'Utility']
-        ]).registerCommandsIn(join(__dirname, 'src/commands'));
+        ]).registerDefaultCommands({
+        help: false, prefix: false, eval: false, ping: false, unknownCommand: false
+      }).registerCommandsIn(join(__dirname, 'src/commands'));
 
       return this.login(token);
     }).catch(error => {

@@ -2,6 +2,7 @@ import { Command } from "discord.js-commando";
 import { ColorResolvable } from "discord.js";
 import { readdirSync, statSync } from "fs";
 import { join } from "path";
+import { metric } from '@pm2/io';
 
 export default class MiraiBotCommand extends Command {
   public botColor: ColorResolvable;
