@@ -1,3 +1,5 @@
+import { playVoice } from "./src/component/VoiceComponent";
+
 require('dotenv').config();
 import { CommandoClient } from 'discord.js-commando';
 import { join } from 'path';
@@ -5,9 +7,11 @@ import { readdirSync } from "fs";
 import {
   ColorResolvable,
   MessageEmbed,
-  TextChannel
+  TextChannel, VoiceChannel, VoiceConnection
 } from "discord.js";
 import { metric } from '@pm2/io';
+import asyncWait from "./src/function/asyncWait";
+import getRandomInArray from "./src/function/getRandomInArray";
 
 // UTC + 2 or UTC + 1
 const UTC_LOCAL_TIMESHIFT = 1;
@@ -15,7 +19,7 @@ const UTC_LOCAL_TIMESHIFT = 1;
 const MIRAI_TEAM_GUILD_ID = '168673025460273152';
 const MIRAI_TEAM_GENERAL_CHANNEL_ID = '168673025460273152';
 
-new (class MiraiBot extends CommandoClient {
+class MiraiBot extends CommandoClient {
   public botColor: ColorResolvable;
 
   constructor(token) {
@@ -27,13 +31,15 @@ new (class MiraiBot extends CommandoClient {
       owner: '140033402681163776',
     });
 
-    const realtimeUsers = metric({name: 'MiraiBot Users'});
-    realtimeUsers.set(this.users);
+    this.botColor = [0, 210, 255];
 
-    this.setupDatabase()
-      .then(() => this.setEvents())
-      .then(() => this.setupIntervals())
-      .then(() => {
+    const bootstrap = async () => {
+      await this.setupDatabase();
+      await this.setEvents();
+
+      if (process.env.NODE_ENV === 'production') {
+        await this.setupIntervals();
+      }
 
       // Setup Commando Registry
       this.registry
@@ -46,14 +52,17 @@ new (class MiraiBot extends CommandoClient {
           ['misc', 'Miscellanious'],
           ['util', 'Utility']
         ]).registerDefaultCommands({
-        help: false, prefix: false, eval: false, ping: false, unknownCommand: false
+        help: false, prefix: false, eval: true, ping: false, unknownCommand: false
       }).registerCommandsIn(join(__dirname, 'src/commands'));
 
-      return this.login(token);
-    }).catch(error => {
+      await this.login(token);
+
+    }
+
+    bootstrap().catch(error => {
       console.error(error);
       process.exit(1);
-    });
+    })
 
     return this;
 
@@ -68,10 +77,15 @@ new (class MiraiBot extends CommandoClient {
     this.once('ready', () => {
       console.log(`Mirai Bot logged in as ${this.user.tag}. (${this.user.id})`);
       this.users.fetch("140033402681163776").then(Kazuhiro => Kazuhiro.send('El. Psy... Kongroo.')).catch(console.error);
+
+      if (process.env.NODE_ENV === 'development') {
+        this.testFunction().catch(console.error);
+      }
+
       this.user.setActivity('servir le futur.').catch(console.error);
     });
 
-    for (const event of readdirSync('./src/events').filter(file => file.endsWith('.js'))) {
+    for (const event of readdirSync('./src/events').filter(file => file.endsWith('.js') || file.endsWith('.ts'))) {
       const eventFunction = require(`./src/events/${event}`);
       this.on(event.slice(0, event.length - 3), (...args) => eventFunction(this, ...args));
     }
@@ -177,11 +191,6 @@ new (class MiraiBot extends CommandoClient {
       "Commencez par faire ce qui est nécessaire ; puis faites ce qui est possible ; et soudain vous faites l'impossible."
     ];
 
-    const get_random_in_array = (array) => {
-      if (array.length === 1) return (array[0]);
-      return (array[Math.floor(Math.random() * array.length)]);
-    }
-
     const set_morning_day_interval = async () => {
       const generalChannelMiraiTeam = <TextChannel>(await this.channels.fetch("168673025460273152"));
       const creationDate = (await this.guilds.fetch(MIRAI_TEAM_GENERAL_CHANNEL_ID)).createdAt;
@@ -189,6 +198,7 @@ new (class MiraiBot extends CommandoClient {
       let morning_message = new MessageEmbed()
         .setAuthor("Monokuma", "https://vignette.wikia.nocookie.net/danganronpa/images/c/c6/Strikes_Back.jpg/revision/latest?cb=20161029022327")
         .setColor(this.botColor)
+        .setDescription('Je vous attends dans <#777579520499777546> dans 1 minute pour mon allocution ! :monokuma_laugh:')
         .addField(
           "Bonjour, tout le monde !",
           "Il est maintenant 7h du matin\n" +
@@ -196,7 +206,7 @@ new (class MiraiBot extends CommandoClient {
           "Il est l'heure de se lever !\n" +
           "\n" +
           "Préparez-vous à accueillir un autre jour meeeeerveilleux !"
-        ).setFooter(get_random_in_array(quotes)).setImage(get_random_in_array(monokumaImgs));
+        ).setDescription(`« *${getRandomInArray(quotes)}* »`).setImage(getRandomInArray(monokumaImgs));
 
       if (creationDate) {
         let days = (new Date().valueOf() - creationDate.valueOf()) / 1000 / 60 / 60 / 24;
@@ -205,12 +215,14 @@ new (class MiraiBot extends CommandoClient {
       }
 
       await generalChannelMiraiTeam.send(morning_message);
+      asyncWait(60000).then(() => this.sendVoiceAnnouncement(false)).catch(console.error);
 
       setInterval(() => {
 
         morning_message = new MessageEmbed()
           .setAuthor("Monokuma", "https://vignette.wikia.nocookie.net/danganronpa/images/c/c6/Strikes_Back.jpg/revision/latest?cb=20161029022327")
           .setColor(this.botColor)
+          .setDescription('Je vous attends dans <#777579520499777546> dans 1 minute pour mon allocution ! :monokuma_laugh:')
           .addField(
             "Bonjour, tout le monde !",
             "Il est maintenant 7h du matin\n" +
@@ -218,7 +230,7 @@ new (class MiraiBot extends CommandoClient {
             "Il est l'heure de se lever !\n" +
             "\n" +
             "Préparez-vous à accueillir un autre jour meeeeerveilleux !"
-          ).setImage(get_random_in_array(monokumaImgs));
+          ).setImage(getRandomInArray(monokumaImgs));
 
         if (creationDate) {
           let days = (new Date().valueOf() - creationDate.valueOf()) / 1000 / 60 / 60 / 24;
@@ -227,6 +239,7 @@ new (class MiraiBot extends CommandoClient {
         }
 
         generalChannelMiraiTeam.send(morning_message).catch(console.error);
+        asyncWait(60000).then(() => this.sendVoiceAnnouncement(false)).catch(console.error);
 
       }, 60000 * 60 * 24);
     };
@@ -237,6 +250,7 @@ new (class MiraiBot extends CommandoClient {
       const evening_message = new MessageEmbed()
         .setAuthor("Monokuma", "https://vignette.wikia.nocookie.net/danganronpa/images/c/c6/Strikes_Back.jpg/revision/latest?cb=20161029022327")
         .setColor(this.botColor)
+        .setDescription('Je vous attends dans <#777579520499777546> dans 1 minute pour mon allocution ! :monokuma_laugh:')
         .addField(
           "Mm, ahem, ceci est une annonce de l'école.",
           "Il est maintenant 22 h.\n" +
@@ -245,9 +259,10 @@ new (class MiraiBot extends CommandoClient {
           "Les salons discord vont bientôt être fermés, et y discuter à \n" +
           "partir de maintenant est strictement interdit.\n" +
           "Maintenant, faites de beaux rêves ! Le marchand de sable va bientôt passer..."
-        ).setImage(get_random_in_array(monokumaImgs));
+        ).setImage(getRandomInArray(monokumaImgs));
 
       await generalChannelMiraiTeam.send(evening_message);
+      asyncWait(60000).then(() => this.sendVoiceAnnouncement(true)).catch(console.error);
 
       //analyseLogChan(evening_message, generalChannelMiraiTeam).catch(console.error);
 
@@ -256,6 +271,7 @@ new (class MiraiBot extends CommandoClient {
         const evening_message = new MessageEmbed()
           .setAuthor("Monokuma", "https://vignette.wikia.nocookie.net/danganronpa/images/c/c6/Strikes_Back.jpg/revision/latest?cb=20161029022327")
           .setColor(this.botColor)
+          .setDescription('Je vous attends dans <#777579520499777546> dans 1 minute pour mon allocution ! :monokuma_laugh:')
           .addField(
             "Mm, ahem, ceci est une annonce de l'école.",
             "Il est maintenant 22 h.\n" +
@@ -264,9 +280,10 @@ new (class MiraiBot extends CommandoClient {
             "Les salons discord vont bientôt être fermés, et y discuter à \n" +
             "partir de maintenant est strictement interdit.\n" +
             "Maintenant, faites de beaux rêves ! Le marchand de sable va bientôt passer..."
-          ).setImage(get_random_in_array(monokumaImgs));
+          ).setImage(getRandomInArray(monokumaImgs));
 
         generalChannelMiraiTeam.send(evening_message).catch(console.error);
+        asyncWait(60000).then(() => this.sendVoiceAnnouncement(true)).catch(console.error);
 
         //analyseLogChan(evening_message, generalChannelMiraiTeam).catch(console.error);
 
@@ -283,14 +300,40 @@ new (class MiraiBot extends CommandoClient {
 
   }
 
-  /*on(event: string, listener: Function): this {
-    return super.on('error', (error) => console.error(error));
-  }*/
+  async sendVoiceAnnouncement(evening = false) {
+    const vocalRoom = <VoiceChannel>await this.channels.fetch('777579520499777546');
+    const announcementPath = `./src/asset/voice/monokuma/${evening ? 'evening' : 'morning'}_announcement`;
+    const monokumaLaughterPath = './src/asset/voice/monokuma/laughter';
+    let voiceConnection = await vocalRoom.join();
 
-})(process.env.bot_token)
+    for (const monokumaVoiceFile of readdirSync(announcementPath)) {
+      console.log(monokumaVoiceFile);
+      await playVoice(voiceConnection, vocalRoom, `${announcementPath}/${monokumaVoiceFile}`);
+      await asyncWait(200);
+    }
 
-interface MiraiBot extends CommandoClient {
-  botColor: ColorResolvable;
+    await asyncWait(1000);
+
+
+    await playVoice(
+      voiceConnection, vocalRoom,
+      `${monokumaLaughterPath}/${getRandomInArray(readdirSync(monokumaLaughterPath))}`
+    );
+
+    return await new Promise<boolean>((resolve, reject) => {
+      voiceConnection.on('disconnect', () => {
+        setTimeout(() => {resolve(true)}, 3000);
+      });
+      voiceConnection.disconnect();
+    });
+  }
+
+  async testFunction() {
+
+  }
+
 }
+
+new MiraiBot(process.env.bot_token);
 
 export { MiraiBot };
