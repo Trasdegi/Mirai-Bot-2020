@@ -12,6 +12,7 @@ import {
 import { metric } from '@pm2/io';
 import asyncWait from "./src/function/asyncWait";
 import getRandomInArray from "./src/function/getRandomInArray";
+import doMultipleTimes from "./src/function/doMultipleTimes";
 
 // UTC + 2 or UTC + 1
 const UTC_LOCAL_TIMESHIFT = 1;
@@ -194,32 +195,8 @@ class MiraiBot extends CommandoClient {
     const set_morning_day_interval = async () => {
       const generalChannelMiraiTeam = <TextChannel>(await this.channels.fetch("168673025460273152"));
       const creationDate = (await this.guilds.fetch(MIRAI_TEAM_GENERAL_CHANNEL_ID)).createdAt;
-
-      let morning_message = new MessageEmbed()
-        .setAuthor("Monokuma", "https://vignette.wikia.nocookie.net/danganronpa/images/c/c6/Strikes_Back.jpg/revision/latest?cb=20161029022327")
-        .setColor(this.botColor)
-        .setDescription('Je vous attends dans <#777579520499777546> dans 1 minute pour mon allocution ! :monokuma_laugh:')
-        .addField(
-          "Bonjour, tout le monde !",
-          "Il est maintenant 7h du matin\n" +
-          "et la période de nuit est officiellement terminée !\n" +
-          "Il est l'heure de se lever !\n" +
-          "\n" +
-          "Préparez-vous à accueillir un autre jour meeeeerveilleux !"
-        ).setDescription(`« *${getRandomInArray(quotes)}* »`).setImage(getRandomInArray(monokumaImgs));
-
-      if (creationDate) {
-        let days = (new Date().valueOf() - creationDate.valueOf()) / 1000 / 60 / 60 / 24;
-
-        morning_message.setFooter(`Ainsi débute le jour ${days.toFixed(0)} à l'Académie du Pic de l'Espoir.`);
-      }
-
-      await generalChannelMiraiTeam.send(morning_message);
-      asyncWait(60000).then(() => this.sendVoiceAnnouncement(false)).catch(console.error);
-
-      setInterval(() => {
-
-        morning_message = new MessageEmbed()
+      const triggerMorningAnnouncement = async () => {
+        let morning_message = new MessageEmbed()
           .setAuthor("Monokuma", "https://vignette.wikia.nocookie.net/danganronpa/images/c/c6/Strikes_Back.jpg/revision/latest?cb=20161029022327")
           .setColor(this.botColor)
           .setDescription('Je vous attends dans <#777579520499777546> dans 1 minute pour mon allocution ! :monokuma_laugh:')
@@ -230,7 +207,7 @@ class MiraiBot extends CommandoClient {
             "Il est l'heure de se lever !\n" +
             "\n" +
             "Préparez-vous à accueillir un autre jour meeeeerveilleux !"
-          ).setImage(getRandomInArray(monokumaImgs));
+          ).setDescription(`« *${getRandomInArray(quotes)}* »`).setImage(getRandomInArray(monokumaImgs));
 
         if (creationDate) {
           let days = (new Date().valueOf() - creationDate.valueOf()) / 1000 / 60 / 60 / 24;
@@ -238,36 +215,41 @@ class MiraiBot extends CommandoClient {
           morning_message.setFooter(`Ainsi débute le jour ${days.toFixed(0)} à l'Académie du Pic de l'Espoir.`);
         }
 
-        generalChannelMiraiTeam.send(morning_message).catch(console.error);
-        asyncWait(60000).then(() => this.sendVoiceAnnouncement(false)).catch(console.error);
+        await generalChannelMiraiTeam.send(morning_message);
+        await asyncWait(60000);
+
+      };
+      const triggerVoiceAnnouncement = async () => {
+        await generalChannelMiraiTeam.send(new MessageEmbed().setColor(this.botColor)
+          .setAuthor("Monokuma", "https://vignette.wikia.nocookie.net/danganronpa/images/c/c6/Strikes_Back.jpg/revision/latest?cb=20161029022327")
+          .setDescription("Mon allocution dans 30 secondes pour ceux qui l'auraient raté !")
+        );
+        await asyncWait(30000);
+        await this.sendVoiceAnnouncement(false);
+      };
+
+      triggerMorningAnnouncement()
+        .then(() => this.sendVoiceAnnouncement(false))
+        .then(() => asyncWait(110000))
+        .then(() => doMultipleTimes(
+          triggerVoiceAnnouncement, 4, 110000
+        )).catch(console.error);
+
+      setInterval(() => {
+
+        triggerMorningAnnouncement()
+          .then(() => this.sendVoiceAnnouncement(false))
+          .then(() => asyncWait(110000))
+          .then(() => doMultipleTimes(
+          triggerVoiceAnnouncement, 4, 110000
+        )).catch(console.error);
 
       }, 60000 * 60 * 24);
     };
 
-    let set_evening_interval = async () => {
+    const set_evening_interval = async () => {
       const generalChannelMiraiTeam = <TextChannel>(await this.channels.fetch("168673025460273152"));
-
-      const evening_message = new MessageEmbed()
-        .setAuthor("Monokuma", "https://vignette.wikia.nocookie.net/danganronpa/images/c/c6/Strikes_Back.jpg/revision/latest?cb=20161029022327")
-        .setColor(this.botColor)
-        .setDescription('Je vous attends dans <#777579520499777546> dans 1 minute pour mon allocution ! :monokuma_laugh:')
-        .addField(
-          "Mm, ahem, ceci est une annonce de l'école.",
-          "Il est maintenant 22 h.\n" +
-          "\n" +
-          "Autrement dit, c'est officiellement la période de nuit.\n" +
-          "Les salons discord vont bientôt être fermés, et y discuter à \n" +
-          "partir de maintenant est strictement interdit.\n" +
-          "Maintenant, faites de beaux rêves ! Le marchand de sable va bientôt passer..."
-        ).setImage(getRandomInArray(monokumaImgs));
-
-      await generalChannelMiraiTeam.send(evening_message);
-      asyncWait(60000).then(() => this.sendVoiceAnnouncement(true)).catch(console.error);
-
-      //analyseLogChan(evening_message, generalChannelMiraiTeam).catch(console.error);
-
-      setInterval(() => {
-
+      const triggerEveningAnnouncement = async () => {
         const evening_message = new MessageEmbed()
           .setAuthor("Monokuma", "https://vignette.wikia.nocookie.net/danganronpa/images/c/c6/Strikes_Back.jpg/revision/latest?cb=20161029022327")
           .setColor(this.botColor)
@@ -282,10 +264,33 @@ class MiraiBot extends CommandoClient {
             "Maintenant, faites de beaux rêves ! Le marchand de sable va bientôt passer..."
           ).setImage(getRandomInArray(monokumaImgs));
 
-        generalChannelMiraiTeam.send(evening_message).catch(console.error);
-        asyncWait(60000).then(() => this.sendVoiceAnnouncement(true)).catch(console.error);
+        await generalChannelMiraiTeam.send(evening_message);
+        await asyncWait(60000);
+      };
+      const triggerVoiceAnnouncement = async () => {
+        await generalChannelMiraiTeam.send(new MessageEmbed().setColor(this.botColor)
+          .setAuthor("Monokuma", "https://vignette.wikia.nocookie.net/danganronpa/images/c/c6/Strikes_Back.jpg/revision/latest?cb=20161029022327")
+          .setDescription("Mon allocution dans 30 secondes pour ceux qui l'auraient raté !")
+        );
+        await asyncWait(30000);
+        await this.sendVoiceAnnouncement(true);
+      };
 
-        //analyseLogChan(evening_message, generalChannelMiraiTeam).catch(console.error);
+      triggerEveningAnnouncement()
+        .then(() => this.sendVoiceAnnouncement(false))
+        .then(() => asyncWait(110000))
+        .then(() => doMultipleTimes(
+          triggerVoiceAnnouncement, 4, 110000
+        )).catch(console.error);
+
+      setInterval(() => {
+
+        triggerEveningAnnouncement()
+          .then(() => this.sendVoiceAnnouncement(false))
+          .then(() => asyncWait(110000))
+          .then(() => doMultipleTimes(
+            triggerVoiceAnnouncement, 4, 110000
+          )).catch(console.error);
 
       }, 60000 * 60 * 24);
 
