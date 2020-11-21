@@ -8,6 +8,7 @@ const doMultipleTimes = async (asyncFunc: Function, nb: number, interval: number
       await asyncWait(interval);
     }
     await asyncFunc();
+    i += 1;
   } while (i < nb);
 };
 

@@ -144,10 +144,7 @@ class MiraiBot extends CommandoClient {
       let evening_done = false;
       let day_interval_done = false;
 
-      clearInterval(minute_interval);
-
-      monokuma_interval = setInterval(() => {
-
+      const checkMonokumaInterval = () => {
         if (evening_done && morning_done && day_interval_done) {
           clearInterval(monokuma_interval);
         }
@@ -172,7 +169,14 @@ class MiraiBot extends CommandoClient {
           //set_day_interval();
           day_interval_done = true;
         }
+      };
 
+      clearInterval(minute_interval);
+
+      checkMonokumaInterval();
+
+      monokuma_interval = setInterval(() => {
+        checkMonokumaInterval();
       }, 60000 * 60);
     };
 
@@ -232,7 +236,7 @@ class MiraiBot extends CommandoClient {
         .then(() => this.sendVoiceAnnouncement(false))
         .then(() => asyncWait(110000))
         .then(() => doMultipleTimes(
-          triggerVoiceAnnouncement, 4, 110000
+          triggerVoiceAnnouncement, 2, 220000
         )).catch(console.error);
 
       setInterval(() => {
@@ -241,7 +245,7 @@ class MiraiBot extends CommandoClient {
           .then(() => this.sendVoiceAnnouncement(false))
           .then(() => asyncWait(110000))
           .then(() => doMultipleTimes(
-          triggerVoiceAnnouncement, 4, 110000
+          triggerVoiceAnnouncement, 2, 220000
         )).catch(console.error);
 
       }, 60000 * 60 * 24);
@@ -277,19 +281,19 @@ class MiraiBot extends CommandoClient {
       };
 
       triggerEveningAnnouncement()
-        .then(() => this.sendVoiceAnnouncement(false))
+        .then(() => this.sendVoiceAnnouncement(true))
         .then(() => asyncWait(110000))
         .then(() => doMultipleTimes(
-          triggerVoiceAnnouncement, 4, 110000
+          triggerVoiceAnnouncement, 2, 220000
         )).catch(console.error);
 
       setInterval(() => {
 
         triggerEveningAnnouncement()
-          .then(() => this.sendVoiceAnnouncement(false))
+          .then(() => this.sendVoiceAnnouncement(true))
           .then(() => asyncWait(110000))
           .then(() => doMultipleTimes(
-            triggerVoiceAnnouncement, 4, 110000
+            triggerVoiceAnnouncement, 2, 220000
           )).catch(console.error);
 
       }, 60000 * 60 * 24);
