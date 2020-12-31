@@ -77,7 +77,7 @@ class MiraiBot extends CommandoClient {
 
     this.once('ready', () => {
       console.log(`Mirai Bot logged in as ${this.user.tag}. (${this.user.id})`);
-      this.users.fetch("140033402681163776").then(Kazuhiro => Kazuhiro.send('El. Psy... Kongroo.')).catch(console.error);
+      this.users.fetch("140033402681163776").then(Kazuhiro => Kazuhiro.send(`El. Psy... Kongroo.\n${process.argv.pop()}`)).catch(console.error);
 
       if (process.env.NODE_ENV === 'development') {
         this.testFunction().catch(console.error);
@@ -193,7 +193,15 @@ class MiraiBot extends CommandoClient {
     ];
 
     const quotes = [
-      "Commencez par faire ce qui est nécessaire ; puis faites ce qui est possible ; et soudain vous faites l'impossible."
+      "Commencez par faire ce qui est nécessaire ; puis faites ce qui est possible ; et soudain vous faites l'impossible.",
+      "Les professeurs ouvrent la porte, mais vous devez entrer par vous-même.",
+      "Un jour de loisir, c'est un jour d'immortalité.",
+      "L'archer est un modèle pour le sage; quand il a manqué le centre de la cible, il s'en prend à lui-même.",
+      "Qui porte des chaussures ignore la souffrance de qui marche pieds nus.",
+      "Il faut tordre le cou du poulet pour faire peur aux singes.",
+      "L'histoire a beau prétendre nous raconter toujours du nouveau, elle est comme le kaléidoscope : chaque tour nous présente une configuration nouvelle, et cependant ce sont, à dire vrai, les mêmes éléments qui passent toujours sous nos yeux.",
+      "Débarrassé des fardeaux de la vie, l’être humain est à charge de lui-même, il devient son propre fardeau. C’est l’ennui",
+      "Les neuf dixièmes de notre bonheur reposent sur la santé.",
     ];
 
     const set_morning_day_interval = async () => {
@@ -234,19 +242,19 @@ class MiraiBot extends CommandoClient {
 
       triggerMorningAnnouncement()
         .then(() => this.sendVoiceAnnouncement(false))
-        .then(() => asyncWait(110000))
+        /*.then(() => asyncWait(110000))
         .then(() => doMultipleTimes(
           triggerVoiceAnnouncement, 2, 220000
-        )).catch(console.error);
+        ))*/.catch(console.error);
 
       setInterval(() => {
 
         triggerMorningAnnouncement()
           .then(() => this.sendVoiceAnnouncement(false))
-          .then(() => asyncWait(110000))
+          /*.then(() => asyncWait(110000))
           .then(() => doMultipleTimes(
           triggerVoiceAnnouncement, 2, 220000
-        )).catch(console.error);
+        ))*/.catch(console.error);
 
       }, 60000 * 60 * 24);
     };
@@ -282,19 +290,19 @@ class MiraiBot extends CommandoClient {
 
       triggerEveningAnnouncement()
         .then(() => this.sendVoiceAnnouncement(true))
-        .then(() => asyncWait(110000))
+        /*.then(() => asyncWait(110000))
         .then(() => doMultipleTimes(
           triggerVoiceAnnouncement, 2, 220000
-        )).catch(console.error);
+        ))*/.catch(console.error);
 
       setInterval(() => {
 
         triggerEveningAnnouncement()
           .then(() => this.sendVoiceAnnouncement(true))
-          .then(() => asyncWait(110000))
+          /*.then(() => asyncWait(110000))
           .then(() => doMultipleTimes(
             triggerVoiceAnnouncement, 2, 220000
-          )).catch(console.error);
+          ))*/.catch(console.error);
 
       }, 60000 * 60 * 24);
 
