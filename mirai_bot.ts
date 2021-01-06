@@ -9,10 +9,8 @@ import {
   MessageEmbed,
   TextChannel, VoiceChannel, VoiceConnection
 } from "discord.js";
-import { metric } from '@pm2/io';
 import asyncWait from "./src/function/asyncWait";
 import getRandomInArray from "./src/function/getRandomInArray";
-import doMultipleTimes from "./src/function/doMultipleTimes";
 
 // UTC + 2 or UTC + 1
 const UTC_LOCAL_TIMESHIFT = 1;
@@ -242,19 +240,13 @@ class MiraiBot extends CommandoClient {
 
       triggerMorningAnnouncement()
         .then(() => this.sendVoiceAnnouncement(false))
-        /*.then(() => asyncWait(110000))
-        .then(() => doMultipleTimes(
-          triggerVoiceAnnouncement, 2, 220000
-        ))*/.catch(console.error);
+        .catch(console.error);
 
       setInterval(() => {
 
         triggerMorningAnnouncement()
           .then(() => this.sendVoiceAnnouncement(false))
-          /*.then(() => asyncWait(110000))
-          .then(() => doMultipleTimes(
-          triggerVoiceAnnouncement, 2, 220000
-        ))*/.catch(console.error);
+          .catch(console.error);
 
       }, 60000 * 60 * 24);
     };
@@ -290,19 +282,13 @@ class MiraiBot extends CommandoClient {
 
       triggerEveningAnnouncement()
         .then(() => this.sendVoiceAnnouncement(true))
-        /*.then(() => asyncWait(110000))
-        .then(() => doMultipleTimes(
-          triggerVoiceAnnouncement, 2, 220000
-        ))*/.catch(console.error);
+        .catch(console.error);
 
       setInterval(() => {
 
         triggerEveningAnnouncement()
           .then(() => this.sendVoiceAnnouncement(true))
-          /*.then(() => asyncWait(110000))
-          .then(() => doMultipleTimes(
-            triggerVoiceAnnouncement, 2, 220000
-          ))*/.catch(console.error);
+          .catch(console.error);
 
       }, 60000 * 60 * 24);
 
