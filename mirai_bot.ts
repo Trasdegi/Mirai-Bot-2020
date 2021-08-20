@@ -13,7 +13,7 @@ import asyncWait from "./src/function/asyncWait";
 import getRandomInArray from "./src/function/getRandomInArray";
 
 // UTC + 2 or UTC + 1
-const UTC_LOCAL_TIMESHIFT = 2;
+const UTC_LOCAL_TIMESHIFT = 1;
 
 const MIRAI_TEAM_GUILD_ID = '168673025460273152';
 const MIRAI_TEAM_GENERAL_CHANNEL_ID = '168673025460273152';
